@@ -61,7 +61,7 @@
         Score: <span id="score">0</span><br>
         <span id="highscore">High: 0</span>
     </div>
-    <canvas id="game" width="400" height="320"></canvas>
+    <canvas id="game" width="360" height="320"></canvas>
 
     <div id="controls">
         <div class="empty"></div>
@@ -73,24 +73,24 @@
     </div>
 
 <script>
-// NEON SNAKE - Balanced Width + Slower Speed
+// NEON SNAKE - Slower Speed
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const highEl = document.getElementById('highscore');
 
 const GRID = 20;
-const COLS = canvas.width / GRID;   // 20
-const ROWS = canvas.height / GRID;  // 16
+const COLS = canvas.width / GRID;
+const ROWS = canvas.height / GRID;
 
-let snake = [{x:12,y:8},{x:11,y:8},{x:10,y:8},{x:9,y:8}];
+let snake = [{x:11,y:8},{x:10,y:8},{x:9,y:8},{x:8,y:8}];
 let dx = 1, dy = 0;
 let nextDx = 1, nextDy = 0;
 let food = {};
 let score = 0;
 let highScore = 0;
 let gameOverFlag = false;
-let gameSpeed = 95;        // Slower speed
+let gameSpeed = 95;        // Increased from 75 → Slower speed
 let lastTime = 0;
 let particles = [];
 
@@ -193,7 +193,7 @@ function update() {
         scoreEl.textContent = score;
         createParticles(food.x * GRID + 10, food.y * GRID + 10);
         randomFood();
-        if (gameSpeed > 55) gameSpeed -= 1.2;
+        if (gameSpeed > 55) gameSpeed -= 1.2;   // Slightly slower increase
     } else snake.pop();
 }
 
@@ -211,11 +211,11 @@ function drawGameOver() {
     ctx.fillStyle = '#ff00ff';
     ctx.font = 'bold 36px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', 200, 140);
+    ctx.fillText('GAME OVER', 180, 140);
     ctx.fillStyle = '#00ffff';
     ctx.font = '19px Arial';
-    ctx.fillText(`Score: ${score}`, 200, 190);
-    ctx.fillText('Tap or Press R', 200, 220);
+    ctx.fillText(`Score: ${score}`, 180, 190);
+    ctx.fillText('Tap or Press R', 180, 220);
 }
 
 function loop(ts) {
@@ -233,7 +233,7 @@ function loop(ts) {
     requestAnimationFrame(loop);
 }
 
-// Controls
+// Controls (same)
 document.addEventListener('keydown', e => {
     if (gameOverFlag && e.key.toLowerCase() === 'r') { resetGame(); return; }
     switch(e.key) {
@@ -265,7 +265,7 @@ document.getElementById('right').addEventListener('touchstart', e => {e.preventD
 canvas.addEventListener('click', () => { if (gameOverFlag) resetGame(); });
 
 function resetGame() {
-    snake = [{x:12,y:8},{x:11,y:8},{x:10,y:8},{x:9,y:8}];
+    snake = [{x:11,y:8},{x:10,y:8},{x:9,y:8},{x:8,y:8}];
     dx = 1; dy = 0; nextDx = 1; nextDy = 0;
     score = 0; scoreEl.textContent = '0';
     gameSpeed = 95; gameOverFlag = false; particles = [];
