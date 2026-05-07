@@ -73,15 +73,15 @@
     </div>
 
 <script>
-// NEON SNAKE - Slower Speed
+// NEON SNAKE - Reduced Height
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const highEl = document.getElementById('highscore');
 
 const GRID = 20;
-const COLS = canvas.width / GRID;
-const ROWS = canvas.height / GRID;
+const COLS = canvas.width / GRID;   // 18
+const ROWS = canvas.height / GRID;  // 16
 
 let snake = [{x:11,y:8},{x:10,y:8},{x:9,y:8},{x:8,y:8}];
 let dx = 1, dy = 0;
@@ -90,7 +90,7 @@ let food = {};
 let score = 0;
 let highScore = 0;
 let gameOverFlag = false;
-let gameSpeed = 95;        // Increased from 75 → Slower speed
+let gameSpeed = 75;
 let lastTime = 0;
 let particles = [];
 
@@ -193,7 +193,7 @@ function update() {
         scoreEl.textContent = score;
         createParticles(food.x * GRID + 10, food.y * GRID + 10);
         randomFood();
-        if (gameSpeed > 55) gameSpeed -= 1.2;   // Slightly slower increase
+        if (gameSpeed > 45) gameSpeed -= 1.3;
     } else snake.pop();
 }
 
@@ -214,8 +214,8 @@ function drawGameOver() {
     ctx.fillText('GAME OVER', 180, 140);
     ctx.fillStyle = '#00ffff';
     ctx.font = '19px Arial';
-    ctx.fillText(`Score: ${score}`, 180, 190);
-    ctx.fillText('Tap or Press R', 180, 220);
+    ctx.fillText(`Score: ${score}`, 180, 180);
+    ctx.fillText('Tap or Press R', 180, 210);
 }
 
 function loop(ts) {
@@ -233,7 +233,7 @@ function loop(ts) {
     requestAnimationFrame(loop);
 }
 
-// Controls (same)
+// Controls (same as before)
 document.addEventListener('keydown', e => {
     if (gameOverFlag && e.key.toLowerCase() === 'r') { resetGame(); return; }
     switch(e.key) {
@@ -268,7 +268,7 @@ function resetGame() {
     snake = [{x:11,y:8},{x:10,y:8},{x:9,y:8},{x:8,y:8}];
     dx = 1; dy = 0; nextDx = 1; nextDy = 0;
     score = 0; scoreEl.textContent = '0';
-    gameSpeed = 95; gameOverFlag = false; particles = [];
+    gameSpeed = 75; gameOverFlag = false; particles = [];
     randomFood();
 }
 
