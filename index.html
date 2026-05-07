@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NEON SNAKE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 5px 0;
+            background: #0f001a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            touch-action: none;
+        }
+        canvas {
+            border: 4px solid #ff00ff;
+            border-radius: 10px;
+            box-shadow: 0 0 25px #ff00ff;
+            max-width: 100%;
+            height: auto;
+        }
+        #ui {
+            color: #ff00ff;
+            font-size: 22px;
+            text-shadow: 0 0 10px #ff00ff;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        #highscore {
+            color: #00ffff;
+            font-size: 17px;
+        }
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 55px);
+            gap: 6px;
+            margin-top: 12px;
+        }
+        button {
+            background: rgba(255, 0, 255, 0.25);
+            color: #ff00ff;
+            border: 3px solid #ff00ff;
+            border-radius: 10px;
+            font-size: 26px;
+            height: 55px;
+            width: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .empty { visibility: hidden; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        Score: <span id="score">0</span><br>
+        <span id="highscore">High: 0</span>
+    </div>
+    <canvas id="game" width="360" height="360"></canvas>
+
+    <div id="controls">
+        <div class="empty"></div>
+        <button id="up">↑</button>
+        <div class="empty"></div>
+        <button id="left">←</button>
+        <button id="down">↓</button>
+        <button id="right">→</button>
+    </div>
+
+<script>
+// NEON SNAKE - Reduced Width
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const highEl = document.getElementById('highscore');
+
+const GRID = 20;
+const COLS = canvas.width / GRID;   // 18
+const ROWS = canvas.height / GRID;  // 18
+
+let snake = [{x:11,y:9},{x:10,y:9},{x:9,y:9},{x:8,y:9}];
+let dx = 1, dy = 0;
+let nextDx = 1, nextDy = 0;
+let food = {};
+let score = 0;
+let highScore = 0;
+let gameOverFlag = false;
+let gameSpeed = 75;
+let lastTime = 0;
+let particles = [];
+
+function randomFood() {
+    do {
+        food = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+    } while (snake.some(s => s.x === food.x && s.y === food.y));
+}
+
+function createParticles(x, y) {
+    for (let i = 0; i < 18; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: Math.random() * 6 - 3,
+            vy: Math.random() * 6 - 3,
+            life: 22,
+            color: Math.random() > 0.5 ? '#ff00ff' : '#ffff00'
+        });
+    }
+}
+
+function drawBackground() {
+    ctx.fillStyle = '#0f001a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 0, 255, 0.07)';
+    for (let x = 0; x <= canvas.width; x += GRID) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y <= canvas.height; y += GRID) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+}
+
+function drawSnake() {
+    for (let i = 0; i < snake.length; i++) {
+        const s = snake[i];
+        const x = s.x * GRID;
+        const y = s.y * GRID;
+
+        ctx.shadowBlur = i === 0 ? 25 : 18;
+        ctx.shadowColor = '#ff00ff';
+
+        if (i === 0) {
+            ctx.fillStyle = '#ff00ff';
+            ctx.beginPath(); ctx.roundRect(x+1, y+1, 18, 18, 6); ctx.fill();
+            ctx.fillStyle = '#110022';
+            ctx.beginPath(); ctx.arc(x+12, y+7, 3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x+12, y+13, 3, 0, Math.PI*2); ctx.fill();
+        } else {
+            const alpha = Math.max(0.45, 0.95 - (i * 0.025));
+            ctx.fillStyle = `rgba(220, 0, 255, ${alpha})`;
+            ctx.beginPath(); ctx.roundRect(x+2, y+2, 16, 16, 5); ctx.fill();
+        }
+    }
+    ctx.shadowBlur = 0;
+}
+
+function drawFood() {
+    const x = food.x * GRID + GRID/2;
+    const y = food.y * GRID + GRID/2;
+    ctx.shadowBlur = 35;
+    ctx.shadowColor = '#ffff00';
+    ctx.fillStyle = '#ffff00';
+    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function drawParticles() {
+    for (let i = particles.length-1; i >= 0; i--) {
+        const p = particles[i];
+        ctx.globalAlpha = p.life / 22;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 5, 5);
+        p.x += p.vx; p.y += p.vy; p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function update() {
+    if (gameOverFlag) return;
+    dx = nextDx; dy = nextDy;
+
+    let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+    if (head.x < 0) head.x = COLS - 1;
+    if (head.x >= COLS) head.x = 0;
+    if (head.y < 0) head.y = ROWS - 1;
+    if (head.y >= ROWS) head.y = 0;
+
+    for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) return gameOver();
+    }
+
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        scoreEl.textContent = score;
+        createParticles(food.x * GRID + 10, food.y * GRID + 10);
+        randomFood();
+        if (gameSpeed > 45) gameSpeed -= 1.3;
+    } else snake.pop();
+}
+
+function gameOver() {
+    gameOverFlag = true;
+    if (score > highScore) {
+        highScore = score;
+        highEl.textContent = `High: ${highScore}`;
+    }
+}
+
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(15,0,30,0.9)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#ff00ff';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', 180, 150);
+    ctx.fillStyle = '#00ffff';
+    ctx.font = '19px Arial';
+    ctx.fillText(`Score: ${score}`, 180, 190);
+    ctx.fillText('Tap or Press R', 180, 220);
+}
+
+function loop(ts) {
+    if (!lastTime) lastTime = ts;
+    if (ts - lastTime < gameSpeed) return requestAnimationFrame(loop);
+    lastTime = ts;
+
+    drawBackground();
+    update();
+    drawSnake();
+    drawFood();
+    drawParticles();
+    if (gameOverFlag) drawGameOver();
+
+    requestAnimationFrame(loop);
+}
+
+// Controls
+document.addEventListener('keydown', e => {
+    if (gameOverFlag && e.key.toLowerCase() === 'r') { resetGame(); return; }
+    switch(e.key) {
+        case 'ArrowUp': case 'w': case 'W': if (dy !== 1) { nextDx = 0; nextDy = -1; } break;
+        case 'ArrowDown': case 's': case 'S': if (dy !== -1) { nextDx = 0; nextDy = 1; } break;
+        case 'ArrowLeft': case 'a': case 'A': if (dx !== 1) { nextDx = -1; nextDy = 0; } break;
+        case 'ArrowRight': case 'd': case 'D': if (dx !== -1) { nextDx = 1; nextDy = 0; } break;
+    }
+});
+
+function changeDirection(newDx, newDy) {
+    if (newDy === -1 && dy === 1) return;
+    if (newDy === 1 && dy === -1) return;
+    if (newDx === -1 && dx === 1) return;
+    if (newDx === 1 && dx === -1) return;
+    nextDx = newDx; nextDy = newDy;
+}
+
+document.getElementById('up').addEventListener('click', () => changeDirection(0, -1));
+document.getElementById('down').addEventListener('click', () => changeDirection(0, 1));
+document.getElementById('left').addEventListener('click', () => changeDirection(-1, 0));
+document.getElementById('right').addEventListener('click', () => changeDirection(1, 0));
+
+document.getElementById('up').addEventListener('touchstart', e => {e.preventDefault(); changeDirection(0,-1);});
+document.getElementById('down').addEventListener('touchstart', e => {e.preventDefault(); changeDirection(0,1);});
+document.getElementById('left').addEventListener('touchstart', e => {e.preventDefault(); changeDirection(-1,0);});
+document.getElementById('right').addEventListener('touchstart', e => {e.preventDefault(); changeDirection(1,0);});
+
+canvas.addEventListener('click', () => { if (gameOverFlag) resetGame(); });
+
+function resetGame() {
+    snake = [{x:11,y:9},{x:10,y:9},{x:9,y:9},{x:8,y:9}];
+    dx = 1; dy = 0; nextDx = 1; nextDy = 0;
+    score = 0; scoreEl.textContent = '0';
+    gameSpeed = 75; gameOverFlag = false; particles = [];
+    randomFood();
+}
+
+randomFood();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
