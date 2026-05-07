@@ -61,7 +61,7 @@
         Score: <span id="score">0</span><br>
         <span id="highscore">High: 0</span>
     </div>
-    <canvas id="game" width="360" height="360"></canvas>
+    <canvas id="game" width="360" height="320"></canvas>
 
     <div id="controls">
         <div class="empty"></div>
@@ -73,7 +73,7 @@
     </div>
 
 <script>
-// NEON SNAKE - Reduced Width
+// NEON SNAKE - Reduced Height
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
@@ -81,9 +81,9 @@ const highEl = document.getElementById('highscore');
 
 const GRID = 20;
 const COLS = canvas.width / GRID;   // 18
-const ROWS = canvas.height / GRID;  // 18
+const ROWS = canvas.height / GRID;  // 16
 
-let snake = [{x:11,y:9},{x:10,y:9},{x:9,y:9},{x:8,y:9}];
+let snake = [{x:11,y:8},{x:10,y:8},{x:9,y:8},{x:8,y:8}];
 let dx = 1, dy = 0;
 let nextDx = 1, nextDy = 0;
 let food = {};
@@ -211,11 +211,11 @@ function drawGameOver() {
     ctx.fillStyle = '#ff00ff';
     ctx.font = 'bold 36px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', 180, 150);
+    ctx.fillText('GAME OVER', 180, 140);
     ctx.fillStyle = '#00ffff';
     ctx.font = '19px Arial';
-    ctx.fillText(`Score: ${score}`, 180, 190);
-    ctx.fillText('Tap or Press R', 180, 220);
+    ctx.fillText(`Score: ${score}`, 180, 180);
+    ctx.fillText('Tap or Press R', 180, 210);
 }
 
 function loop(ts) {
@@ -233,7 +233,7 @@ function loop(ts) {
     requestAnimationFrame(loop);
 }
 
-// Controls
+// Controls (same as before)
 document.addEventListener('keydown', e => {
     if (gameOverFlag && e.key.toLowerCase() === 'r') { resetGame(); return; }
     switch(e.key) {
@@ -265,7 +265,7 @@ document.getElementById('right').addEventListener('touchstart', e => {e.preventD
 canvas.addEventListener('click', () => { if (gameOverFlag) resetGame(); });
 
 function resetGame() {
-    snake = [{x:11,y:9},{x:10,y:9},{x:9,y:9},{x:8,y:9}];
+    snake = [{x:11,y:8},{x:10,y:8},{x:9,y:8},{x:8,y:8}];
     dx = 1; dy = 0; nextDx = 1; nextDy = 0;
     score = 0; scoreEl.textContent = '0';
     gameSpeed = 75; gameOverFlag = false; particles = [];
